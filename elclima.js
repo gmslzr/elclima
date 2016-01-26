@@ -1,8 +1,9 @@
 (function($) {
 	"use strict";
 	var forecastURL = 'https://api.forecast.io/forecast/';
+	var googleURL = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=';
 	var clima = {};
-  	var cardinalNotation, day, month, year, hour, minutes, months_array;
+  	var googlexhr, forecastxhr, weatherdata, locationInfo, cardinalNotation, day, month, year, hour, minutes, months_array;
 	$.fn.elClima = function ( options ){
 		var settings = $.extend({
 			lat:'25.791992',
@@ -10,6 +11,7 @@
 			localTime: false,
 			beaufort: false,
 			metricUnits: false,
+			getLocationInfo: false,
 			api_key:'',
 			success: function(clima){},
 			error: function(clima){}
@@ -115,47 +117,63 @@
 			return beaufort;
 		}
 		
-		$.ajax({
-			dataType: "jsonp",
-			url: encodeURI(forecastURL+settings.api_key+'/'+settings.lat+','+settings.lng),
-			contentType:'application/json',
-		})
-		.done(function(data, status, jqXHR){
-			if(data !== null){
-				//settings.success({success: data});
-				clima.sunrise = convertHumanDate(data.daily.data[0].sunriseTime, 'basic');
-				clima.sunset = convertHumanDate(data.daily.data[0].sunsetTime, 'basic');
-				clima.temperature = data.currently.temperature;
-				clima.summary = data.currently.summary;
-				clima.timezone = data.timezone;
-				clima.humidity = data.currently.humidity;
-				clima.windspeed = data.currently.windSpeed;
-				clima.windDirection = convertWindDirection(data.currently.windBearing);
-				clima.windBearing = data.currently.windBearing;
-				clima.precipitationProbability = data.currently.precipProbability;
-				clima.pressure = data.currently.pressure;
-				clima.icon = data.currently.icon;
-				if(settings.localTime === true){
-					clima.localTime = [];
-					clima.localTime.time = data.currently.time;
-					clima.localTime.humanTime = convertHumanDate(data.currently.time, 'basic');
-					clima.localTime.fullHumanTime = convertHumanDate(data.currently.time, 'full');
-				}
-				if(settings.metricUnits === true){
-					clima.metricUnits = [];
-					clima.metricUnits.temperature = convertCelsius(data.currently.temperature);
-					clima.metricUnits.windspeed = milesToKm(data.currently.windSpeed);
-				}
-				if(settings.beaufort === true){
-					clima.beaufort = beaufortDetails(data.currently.windSpeed);
-				}
-				settings.success({clima});
-			}
-		})
-		.fail(function(jqXHR, status){
-			settings.error({msg:'[El Clima]: There\'s been an error getting the weather information. HTTP status: '+jqXHR.status+'. Status string: '+status});
-		});
+		forecastxhr = $.ajax({ dataType: "jsonp",url: encodeURI(forecastURL+settings.api_key+'/'+settings.lat+','+settings.lng),contentType:'application/json'});
+		
+		if(settings.getLocationInfo === true){
+			googlexhr = $.ajax({url: encodeURI(googleURL+settings.lat+','+settings.lng)});
+		}
 
+		$.when(googlexhr, forecastxhr)
+			.done(function (googlerq, forecastrq){
+				//console.log(googlerq);
+				if(settings.getLocationInfo === true){
+					if(googlerq[0].status === 'OK'){
+						locationInfo = googlerq[0].results[0].address_components[4].short_name + ', '+ googlerq[0].results[0].address_components[5].short_name;
+						//console.log(locationInfo);
+					}
+					else{
+						settings.error({msg:'[El Clima]: There\'s been an error getting the geocoder information. Verify provided coordinates.'});	
+					}
+				}
+
+				if(forecastxhr !== null){
+					weatherdata = forecastrq[0];
+					clima.sunrise = convertHumanDate(weatherdata.daily.data[0].sunriseTime, 'basic');
+					clima.sunset = convertHumanDate(weatherdata.daily.data[0].sunsetTime, 'basic');
+					clima.temperature = weatherdata.currently.temperature;
+					clima.summary = weatherdata.currently.summary;
+					clima.timezone = weatherdata.timezone;
+					clima.humidity = weatherdata.currently.humidity;
+					clima.windspeed = weatherdata.currently.windSpeed;
+					clima.windDirection = convertWindDirection(weatherdata.currently.windBearing);
+					clima.windBearing = weatherdata.currently.windBearing;
+					clima.precipitationProbability = weatherdata.currently.precipProbability;
+					clima.pressure = weatherdata.currently.pressure;
+					clima.icon = weatherdata.currently.icon;
+					if(settings.getLocationInfo === true){
+						clima.locationInfo = locationInfo;
+					}
+					if(settings.localTime === true){
+						clima.localTime = [];
+						clima.localTime.time = weatherdata.currently.time;
+						clima.localTime.humanTime = convertHumanDate(weatherdata.currently.time, 'basic');
+						clima.localTime.fullHumanTime = convertHumanDate(weatherdata.currently.time, 'full');
+					}
+					if(settings.metricUnits === true){
+						clima.metricUnits = [];
+						clima.metricUnits.temperature = convertCelsius(weatherdata.currently.temperature);
+						clima.metricUnits.windspeed = milesToKm(weatherdata.currently.windSpeed);
+					}
+					if(settings.beaufort === true){
+						clima.beaufort = beaufortDetails(weatherdata.currently.windSpeed);
+					}
+					settings.success({elclima: clima});
+				}
+			})
+			.fail(function(jqXHR, status){
+				//console.log(googleErr);
+				settings.error({msg:'[El Clima]: There\'s been an error retrieving information. HTTP status: '+jqXHR.status+'. Status string: '+status});	
+			});
 		return this;
 	};
 })(jQuery);
