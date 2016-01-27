@@ -2,17 +2,21 @@
 <html>
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-    <script src="elclima.min.js"></script>
+    <script src="elclima.js"></script>
     <script type="text/javascript">
     $(document).ready(function(){
         $('#weather').elClima({
             beaufort: false,
             localTime: false,
-            metricUnits: false,
+            metricUnits: true,
             getLocationInfo: true,
-            api_key:'FORECAST_IO_APIKEY_GOES_HERE',
+            api_key:'6930a2508a1c2bea6c85cf5fcf5e4374',
             success:function(data){
-                console.log(data);
+                weather = data.elclima;
+                console.log(weather);
+                html = '<div class="weatherBoxHeader"><div class="location"><i class="fa fa-map-marker"></i>'+weather.locationInfo+'</div><div class="temp_box"><h3>'+weather.temperature+'<sup>&deg;</sup>F<b>/ '+weather.metricUnits.temperature+'<sup>&deg;</sup>C</b></h3></div><div class="weather_code"><i class="icon-'+weather.icon+'"></i></div></div>';
+            html += '<div class="weather_info"><h3>Weather information</h3><ul><li>Wind<span>'+weather.windDirection+'</span></li><li>Sunrise<span>'+weather.sunrise+'</span></li><li>Humidity<span>'+weather.humidity+'%</span></li><li>Sunset<span>'+weather.sunset+'</span></li><li>Pressure<span>'+weather.pressure+'</span></li></ul></div>';
+            $('#weather').html(html);
             },
             error: function(data){
                 console.log(data);

@@ -128,7 +128,7 @@
 				//console.log(googlerq);
 				if(settings.getLocationInfo === true){
 					if(googlerq[0].status === 'OK'){
-						locationInfo = googlerq[0].results[0].address_components[4].short_name + ', '+ googlerq[0].results[0].address_components[5].short_name;
+						locationInfo = googlerq[0].results[0].address_components[3].short_name + ', '+ googlerq[0].results[0].address_components[5].short_name;
 						//console.log(locationInfo);
 					}
 					else{
@@ -143,12 +143,12 @@
 					clima.temperature = weatherdata.currently.temperature;
 					clima.summary = weatherdata.currently.summary;
 					clima.timezone = weatherdata.timezone;
-					clima.humidity = weatherdata.currently.humidity;
+					clima.humidity = (weatherdata.currently.humidity *100);
 					clima.windspeed = weatherdata.currently.windSpeed;
 					clima.windDirection = convertWindDirection(weatherdata.currently.windBearing);
 					clima.windBearing = weatherdata.currently.windBearing;
 					clima.precipitationProbability = weatherdata.currently.precipProbability;
-					clima.pressure = weatherdata.currently.pressure;
+					clima.pressure = Math.round(weatherdata.currently.pressure * 0.0295301).toFixed(2);
 					clima.icon = weatherdata.currently.icon;
 					if(settings.getLocationInfo === true){
 						clima.locationInfo = locationInfo;
