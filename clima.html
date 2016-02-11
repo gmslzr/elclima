@@ -10,12 +10,10 @@
             localTime: false,
             metricUnits: true,
             getLocationInfo: true,
-            api_key:'6930a2508a1c2bea6c85cf5fcf5e4374',
+            api_key:'API_KEY_HERE',
             success:function(data){
                 weather = data.elclima;
                 console.log(weather);
-                html = '<div class="weatherBoxHeader"><div class="location"><i class="fa fa-map-marker"></i>'+weather.locationInfo+'</div><div class="temp_box"><h3>'+weather.temperature+'<sup>&deg;</sup>F<b>/ '+weather.metricUnits.temperature+'<sup>&deg;</sup>C</b></h3></div><div class="weather_code"><i class="icon-'+weather.icon+'"></i></div></div>';
-            html += '<div class="weather_info"><h3>Weather information</h3><ul><li>Wind<span>'+weather.windDirection+'</span></li><li>Sunrise<span>'+weather.sunrise+'</span></li><li>Humidity<span>'+weather.humidity+'%</span></li><li>Sunset<span>'+weather.sunset+'</span></li><li>Pressure<span>'+weather.pressure+'</span></li></ul></div>';
             $('#weather').html(html);
             },
             error: function(data){
